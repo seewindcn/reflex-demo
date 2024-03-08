@@ -13,7 +13,7 @@ from reflex.vars import BaseVar, ComputedVar, Var
 
 
 def ui_name(cell: rx.Var, row: rx.Var, state: Type[rx.State]) -> rx.Component:
-    href_var = rx.var.create_safe(cell._var_full_name, _var_is_local=False, _var_is_string=False)
+    href_var = Var.create_safe(cell._var_full_name, _var_is_local=False, _var_is_string=False)
     return rx.link(cell, href=href_var)
 
 
@@ -78,8 +78,8 @@ class DataTableEx(DataTable):
 
     def _get_ex_params(self):
         from .datatable import State
-        cell_var = rx.var.create_safe('{cell}')
-        row_var = rx.var.create_safe('{row}')
+        cell_var = Var.create_safe('{cell}')
+        row_var = Var.create_safe('{row}')
         return cell_var, row_var, State  # self._state
 
     def _get_custom_code(self) -> str | None:

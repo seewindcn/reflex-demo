@@ -5,7 +5,7 @@ from rxconfig import config
 
 import reflex as rx
 
-from .components import DataTableEx
+from demo.datatable.components import DataTableEx
 
 docs_url = "https://reflex.dev/docs/getting-started/introduction"
 filename = f"{config.app_name}/{config.app_name}.py"
@@ -15,7 +15,7 @@ class State(rx.State):
     """The app state."""
 
     data: List = [
-        ["Lionel", "Messi", "PSG", "/abc"],
+        ["antd_demo", "Messi", "PSG", "/abc"],
         ["Christiano", "Ronaldo", "Al-Nasir", "/def"]
      ]
     columns: List[str] = ["First Name", "Last Name", "Code", "Url"]
@@ -49,5 +49,3 @@ def index() -> rx.Component:
     )
 
 
-app = rx.App()
-app.add_page(index)
