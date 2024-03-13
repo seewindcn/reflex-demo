@@ -41,16 +41,19 @@ ex_columns = [
 ]
 
 
+_data: list[dict[str, Any]] = [
+    dict(key='1', name='Fike', age=32, gender='male', address='11 Downing Street', ),
+    dict(key='2', name='John', age=42, gender='female', address='12 Downing Street', ),
+    dict(key='3', name='Aim', age=22, gender='male', address='13 Downing Street', ),
+    dict(key='4', name='Expandable', age=52, gender='female', address='14 Downing Street', ),
+    dict(key='5', name='Black', age=62, gender='male', address='15 Downing Street', ),
+]
+
+
 class AntdState(rx.State):
     """Define empty state to allow access to rx.State.router."""
 
-    data_source: list[dict[str, Any]] = [
-        dict(key='1', name='Mike', age=32, gender='male', address='11 Downing Street', ),
-        dict(key='2', name='John', age=42, gender='female', address='12 Downing Street', ),
-        dict(key='3', name='Jim', age=22, gender='male', address='13 Downing Street', ),
-        dict(key='4', name='Expandable', age=52, gender='female', address='14 Downing Street', ),
-        dict(key='5', name='Black', age=62, gender='male', address='15 Downing Street', ),
-    ]
+    data_source: list[dict[str, Any]] = _data[:]
 
     columns = [
         dict(title='Id', dataIndex='key', key='key', ),
@@ -65,6 +68,12 @@ class AntdState(rx.State):
 
     def on_table_change(self, pagination, filters, sorter):
         print("on_table_change:", pagination, filters, sorter)
+        self.data_source = _data
+        if 'gender' in filters and filters['gender'] is not None:
+            self.data_source = [d for d in _data if d['gender'] in filters['gender']]
+        if sorter and sorter['column'] is not None:
+            field, order = sorter['field'], sorter['order']
+            self.data_source = sorted(self.data_source, key=lambda d: d[field], reverse= order == 'descend')
 
 
 def antd1() -> rx.Component:
