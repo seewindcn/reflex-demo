@@ -1,0 +1,4 @@
+.web/*
+.pyc
+.idea/*
+__pycache__/*

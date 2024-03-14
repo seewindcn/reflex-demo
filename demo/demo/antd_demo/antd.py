@@ -241,7 +241,7 @@ class Table(AntdComponent):
 
         codes = _columns() if isinstance(items, list) else _dict()
         states = '\n'.join(
-            f'const {s._var_state.replace('.', '__')} = useContext(StateContexts.{s._var_state.replace('.', '__')});'
+            f"const {s._var_state.replace('.', '__')} = useContext(StateContexts.{s._var_state.replace('.', '__')});"
             for s in _states)
         return f"""
         function {code_name} () {{
