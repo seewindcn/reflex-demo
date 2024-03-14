@@ -1,6 +1,7 @@
 from typing import Any
 import json
 import reflex as rx
+from reflex import Var
 from . import antd
 
 ex_columns = [
@@ -17,7 +18,7 @@ ex_columns = [
         dataIndex='name',
         key='name',
         sorter='true',
-        render='',
+        render=f"""(text) => {rx.code(Var.create_safe('{text}'))}""",
     ),
     dict(
         title='Age',
@@ -40,6 +41,21 @@ ex_columns = [
     ),
 ]
 
+ex_expandable = {
+    "expandedRowRender": lambda record=None:
+        rx.flex(
+            rx.link(rx.button(Var.create_safe('{record.key}')), rx.text('-ok'), href='/'),
+            rx.card(rx.button(Var.create_safe('{record.name}')), rx.text('-ok'), ),
+            spacing="2",
+        ),
+    "rowExpandable": lambda record=None: "record.gender !== 'female'",
+}
+
+# {rx.link(
+#     rx.code(Var.create_safe('{record.key}')),
+#     rx.button(Var.create_safe('{record.name}')),
+# ),
+# }
 
 _data: list[dict[str, Any]] = [
     dict(key='1', name='Fike', age=32, gender='male', address='11 Downing Street', ),
@@ -73,7 +89,7 @@ class AntdState(rx.State):
             self.data_source = [d for d in _data if d['gender'] in filters['gender']]
         if sorter and sorter['column'] is not None:
             field, order = sorter['field'], sorter['order']
-            self.data_source = sorted(self.data_source, key=lambda d: d[field], reverse= order == 'descend')
+            self.data_source = sorted(self.data_source, key=lambda d: d[field], reverse=bool(order == 'descend'))
 
 
 def antd1() -> rx.Component:
@@ -91,6 +107,7 @@ def antd1() -> rx.Component:
                 id='antdEx1',
                 data_source=AntdState.data_source, columns=ex_columns,
                 filters={'gender': ['male']},
+                _expandable=ex_expandable,
                 on_change=AntdState.on_table_change,
             )
         ),
