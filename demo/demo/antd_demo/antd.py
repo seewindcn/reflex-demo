@@ -206,23 +206,25 @@ class Table(AntdComponent):
 
     @staticmethod
     def _get_ex_code(name: str, code_name: str, items: Union[dict, list]) -> str:
+        _states = []
 
         def _kvs(_items: dict, lines=None, sep=''):
             lines.append('{')
             for k, v in _items.items():
-                if k not in [
-                    'render', 'filters', 'sorter',
-                    'expandedRowRender', 'rowExpandable',
-                ]:
+                if isinstance(v, LambdaType):
+                    args = inspect.signature(v).parameters
+                    lines.append(f"  {k}: ({','.join(args.keys())}) => {v(None)},")
+                elif isinstance(v, str):
                     lines.append(f"  {k}: '{v}',")
                 else:
-                    if isinstance(v, LambdaType):
-                        args = inspect.signature(v).parameters
-                        lines.append(f"  {k}: ({','.join(args.keys())}) => {v(None)},")
-                    else:
-                        if isinstance(v, (list, dict)):
-                            v = json.dumps(v)
-                        lines.append(f"  {k}: {v},")
+                    if isinstance(v, (list, dict)):
+                        v = json.dumps(v)
+                    elif isinstance(v, rx.Var):
+                        if v._var_data is None:
+                            continue
+                        _states.append(v)
+                        v = v._var_full_name
+                    lines.append(f"  {k}: {v},")
             lines.append(f'}}{sep}')
 
         def _columns() -> str:
@@ -237,10 +239,15 @@ class Table(AntdComponent):
             _kvs(items, lines, sep=';')
             return '\n'.join(lines)
 
+        codes = _columns() if isinstance(items, list) else _dict()
+        states = '\n'.join(
+            f'const {s._var_state.replace('.', '__')} = useContext(StateContexts.{s._var_state.replace('.', '__')});'
+            for s in _states)
         return f"""
         function {code_name} () {{
             const [addEvents, connectError] = useContext(EventLoopContext);
-            return {_columns() if isinstance(items, list) else _dict()}
+            {states}
+            return {codes}
         }}
         """
 

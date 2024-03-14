@@ -4,42 +4,6 @@ import reflex as rx
 from reflex import Var
 from . import antd
 
-ex_columns = [
-    dict(
-        title='Id',
-        dataIndex='key',
-        key='key',
-        sorter='true',
-        defaultSortOrder='descend',
-        render=lambda text=None: '<a>{text}</a>',
-    ),
-    dict(
-        title='Name',
-        dataIndex='name',
-        key='name',
-        sorter='true',
-        render=lambda text=None: rx.code(Var.create_safe('{text}')),
-    ),
-    dict(
-        title='Age',
-        dataIndex='age',
-        key='age',
-    ),
-    dict(
-        title='Gender',
-        dataIndex='gender',
-        key='gender',
-        filters=[
-            dict(text="Male", value="male"),
-            dict(text="Female", value="female"),
-        ],
-    ),
-    dict(
-        title='Address',
-        dataIndex='address',
-        key='address',
-    ),
-]
 
 ex_expandable = {
     "expandedRowRender": lambda record=None:
@@ -69,6 +33,10 @@ _data: list[dict[str, Any]] = [
 class AntdState(rx.State):
     """Define empty state to allow access to rx.State.router."""
 
+    table_gender_filter = [
+        dict(text="Male", value="male"),
+        dict(text="Female", value="female"),
+    ]
     data_source: list[dict[str, Any]] = _data[:]
 
     columns = [
@@ -86,10 +54,53 @@ class AntdState(rx.State):
         print("on_table_change:", pagination, filters, sorter)
         self.data_source = _data
         if 'gender' in filters and filters['gender'] is not None:
+            # test table_gender_filter
             self.data_source = [d for d in _data if d['gender'] in filters['gender']]
+            if len(filters['gender']) >= 2 and self.table_gender_filter[-1]['text'] != 'Test':
+                self.table_gender_filter.append(dict(text="Test", value="test"))
+            elif self.table_gender_filter[-1]['text'] == 'Test':
+                self.table_gender_filter.pop(-1)
+
         if sorter and sorter['column'] is not None:
             field, order = sorter['field'], sorter['order']
             self.data_source = sorted(self.data_source, key=lambda d: d[field], reverse=bool(order == 'descend'))
+
+    @classmethod
+    def get_columns(cls):
+        ex_columns = [
+            dict(
+                title='Id',
+                dataIndex='key',
+                key='key',
+                sorter='true',
+                defaultSortOrder='descend',
+                render=lambda text=None: '<a>{text}</a>',
+            ),
+            dict(
+                title='Name',
+                dataIndex='name',
+                key='name',
+                sorter='true',
+                render=lambda text=None: rx.code(Var.create_safe('{text}')),
+            ),
+            dict(
+                title='Age',
+                dataIndex='age',
+                key='age',
+            ),
+            dict(
+                title='Gender',
+                dataIndex='gender',
+                key='gender',
+                filters=cls.table_gender_filter,
+            ),
+            dict(
+                title='Address',
+                dataIndex='address',
+                key='address',
+            ),
+        ]
+        return ex_columns
 
 
 def antd1() -> rx.Component:
@@ -107,7 +118,7 @@ def antd1() -> rx.Component:
                 id='antdEx1',  # need
                 data_source=AntdState.data_source,
                 # filters={'gender': ['male']},
-                columns=ex_columns,
+                columns=AntdState.get_columns(),
                 expandable=ex_expandable,
                 on_change=AntdState.on_table_change,
             )
