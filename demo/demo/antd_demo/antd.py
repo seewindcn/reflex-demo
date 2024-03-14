@@ -2,6 +2,7 @@ from typing import List, Any, Union, Dict, Optional
 from types import LambdaType
 from functools import lru_cache
 import json
+import inspect
 
 from pydantic import PrivateAttr
 import reflex as rx
@@ -136,15 +137,15 @@ class Table(AntdComponent):
     tag = 'Table'
 
     data_source: rx.Var[list[dict[str, Any]]]
-    columns: rx.Var[list[dict[str, Any]]]
+    columns: Optional[rx.Var[list[dict[str, Any]]]]
+    _columns: Optional[list[dict[str, Any]]] = PrivateAttr()
     filters: Optional[rx.Var[dict[str, Any]]]
     _expandable: Optional[dict] = PrivateAttr(default=None)
-    # columns: Union[rx.Var[list[dict[str, Any]]], list[dict[str, Any]]]
     # rowSelection: rx.Var[dict[str, Any]]
 
     @property
     def is_ex_columns(self) -> bool:
-        return self.columns is not None and not bool(self.columns._var_data)
+        return self._columns is not None
 
     @property
     def is_ex_expandable(self) -> bool:
@@ -154,9 +155,14 @@ class Table(AntdComponent):
     def is_ex(self) -> bool:
         return self.is_ex_columns or self.is_ex_expandable
 
-    def __init__(self, *args, _expandable=None, **kwargs):
+    def __init__(self, *args, columns=None, expandable=None, **kwargs):
+        if isinstance(columns, rx.Var):
+            self._columns = None
+            kwargs['columns'] = columns
+        else:
+            self._columns = columns
         super().__init__(*args, **kwargs)
-        self._expandable = _expandable
+        self._expandable = expandable
 
     def _get_imports(self) -> imports.ImportDict:
         import_list = []
@@ -200,7 +206,6 @@ class Table(AntdComponent):
 
     @staticmethod
     def _get_ex_code(name: str, code_name: str, items: Union[dict, list]) -> str:
-        cell_var = Var.create_safe('{text}')
 
         def _kvs(_items: dict, lines=None, sep=''):
             lines.append('{')
@@ -212,8 +217,11 @@ class Table(AntdComponent):
                     lines.append(f"  {k}: '{v}',")
                 else:
                     if isinstance(v, LambdaType):
-                        lines.append(f"  {k}: (record) => {v(None)},")
+                        args = inspect.signature(v).parameters
+                        lines.append(f"  {k}: ({','.join(args.keys())}) => {v(None)},")
                     else:
+                        if isinstance(v, (list, dict)):
+                            v = json.dumps(v)
                         lines.append(f"  {k}: {v},")
             lines.append(f'}}{sep}')
 
@@ -237,8 +245,7 @@ class Table(AntdComponent):
         """
 
     def _get_columns_code(self) -> str:
-        cols = json.loads(self.columns._var_name_unwrapped)
-        return self._get_ex_code('columns', self._get_columns_name(), cols)
+        return self._get_ex_code('columns', self._get_columns_name(), self._columns)
 
     def _get_expandable_code(self) -> str:
         return self._get_ex_code('expandable', self._get_expandable_name(), self._expandable)
@@ -256,11 +263,9 @@ class Table(AntdComponent):
     def _render(self, props: dict[str, Any] | None = None) -> Tag:
         if not self.is_ex:
             return super()._render(props=props)
-        tag = (
-            super()
-            ._render()
-            .remove_props("columns", )
-        )
+        tag = super()._render() \
+            .remove_props('columns', )
+
         if self.is_ex_columns:
             tag.special_props.add(
                 Var.create_safe(f"columns={{{self._get_columns_name()}()}}"),

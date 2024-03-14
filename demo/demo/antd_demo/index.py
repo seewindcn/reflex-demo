@@ -11,14 +11,14 @@ ex_columns = [
         key='key',
         sorter='true',
         defaultSortOrder='descend',
-        render='(text) => <a>{text}</a>',
+        render=lambda text=None: '<a>{text}</a>',
     ),
     dict(
         title='Name',
         dataIndex='name',
         key='name',
         sorter='true',
-        render=f"""(text) => {rx.code(Var.create_safe('{text}'))}""",
+        render=lambda text=None: rx.code(Var.create_safe('{text}')),
     ),
     dict(
         title='Age',
@@ -29,10 +29,10 @@ ex_columns = [
         title='Gender',
         dataIndex='gender',
         key='gender',
-        filters=json.dumps([
+        filters=[
             dict(text="Male", value="male"),
             dict(text="Female", value="female"),
-        ]),
+        ],
     ),
     dict(
         title='Address',
@@ -104,10 +104,11 @@ def antd1() -> rx.Component:
         rx.card(
             rx.text('antd_demo tableEx'),
             antd.Table(
-                id='antdEx1',
-                data_source=AntdState.data_source, columns=ex_columns,
-                filters={'gender': ['male']},
-                _expandable=ex_expandable,
+                id='antdEx1',  # need
+                data_source=AntdState.data_source,
+                # filters={'gender': ['male']},
+                columns=ex_columns,
+                expandable=ex_expandable,
                 on_change=AntdState.on_table_change,
             )
         ),
