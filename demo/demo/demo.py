@@ -5,4 +5,4 @@ from .antd_demo import index as antd_index  # noqa
 
 
 app = rx.App()
-app.add_page(index)
+app.add_page(index, route='/')

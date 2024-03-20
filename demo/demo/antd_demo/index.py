@@ -98,6 +98,8 @@ class AntdState(rx.State):
                 title='Address',
                 dataIndex='address',
                 key='address',
+                ellipsis='true',
+                copyable='true',
             ),
         ]
         return ex_columns

@@ -6,6 +6,7 @@ from rxconfig import config
 import reflex as rx
 
 from demo.datatable.components import DataTableEx
+from demo.layouts import default_layout
 
 docs_url = "https://reflex.dev/docs/getting-started/introduction"
 filename = f"{config.app_name}/{config.app_name}.py"
@@ -24,6 +25,7 @@ class State(rx.State):
         print('click', cell, row)
 
 
+@default_layout()
 def index() -> rx.Component:
     return rx.center(
         # rx.theme_panel(),

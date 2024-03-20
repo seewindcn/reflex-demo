@@ -61,10 +61,10 @@ class AntdProvider(AntdComponent):
 
     @classmethod
     def create(cls) -> Component:
-        """Create a new ChakraProvider component.
+        """Create a new AntdProvider component.
 
         Returns:
-            A new ChakraProvider component.
+            A new AntdProvider component.
         """
         return super().create(
             theme=Var.create("theme", _var_is_local=False),
